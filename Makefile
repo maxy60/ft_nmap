@@ -1,4 +1,6 @@
-SRCS		= srcs/main.c
+SRCS		= srcs/main.c			\
+			  srcs/packet_format.c	\
+			  srcs/packet_info.c
 
 OBJS		= ${SRCS:.c=.o} 
 
@@ -10,13 +12,15 @@ CC			= clang
 
 CCFLAGS	= -Wall -Werror -Wextra
 
+PCAPFLAGS = -lpcap
+
 %.o: %.c 
 		$(CC) $(CCFLAGS) $(INCLUDES) -c $< -o $@
 
 all:		${NAME}
 
 ${NAME}:	$(OBJS)
-			$(CC) $(CCFLAGS) $(OBJS) $(LIB) -o $(NAME)
+			$(CC) $(CCFLAGS) $(PCAPFLAGS) $(OBJS) $(LIB) -o $(NAME)
 
 clean:	
 					rm -f ${OBJS}
