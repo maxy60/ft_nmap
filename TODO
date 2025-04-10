@@ -1,0 +1,30 @@
+✅1. nmap utilise une table d’attente (Outstanding Probes) pour 
+✅la gestion des paquets envoyé et en attente
+✅1.1 voir si cette table correspond à la liste qui est enfaite une struct pour stocker les paquets
+✅
+✅réponse 1. Implementer cette table et oui c'est une struct pour stocker une liste des paquets envoyés.
+✅
+✅
+✅2. utiliser poll(dans le thread principal) et libpcap(avec un thread) pour 
+✅receptionner les paquets utiliser un timeout global si pas de reponse,
+
+URGENT. Le code est fonctionnel mais il faut revoir la facon dont je gere les thread et les mutex
+
+3. gerer le parsing des ports si ce n'est pas une plage mais un port unique
+
+4. implementer nmap avec tout les protocoles
+4.1 Voir si il faut envoyer un paquet pour chaque protocole sur chaque port
+(a mon avis non voir comment optimiser)
+4.2 Voir si on utilise un socket par protocole(a mon avis oui)
+
+5. implementer nmap pouvant gerer une plage ip
+
+6. Annalyse des paquets pour determiner si le port est open filtered closed etc..
+
+7. gerer la taille des paquets proprement (PACKET_SIZE)
+
+8. Faire un ping avant d'attaquer tout les ports si pas de reponse l'hote est hors ligne
+
+9. Pour UDP est ICMP utiliser des socket standard pas brut (voir pour meme implementer une version avec socket standar tcp(sudo..))
+
+

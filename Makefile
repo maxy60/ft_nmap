@@ -1,5 +1,5 @@
 SRCS		= srcs/main.c			\
-			  srcs/packet_format.c	\
+			  srcs/send_packet.c	\
 			  srcs/packet_info.c
 
 OBJS		= ${SRCS:.c=.o} 
