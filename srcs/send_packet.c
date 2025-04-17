@@ -23,7 +23,8 @@ uint16_t checksum(void *b, int len) {
     return result;
 }
 
-void    send_packet(const char *ip, int port, int socket) {
+#include <netinet/tcp.h>
+void    send_packet(const char *ip, int port, int socket, t_scan_type scan) {
     char packet[PACKET_SIZE];
     memset(packet, 0, PACKET_SIZE); //tmp
     struct iphdr *ip_pkt = (struct iphdr *)packet;
@@ -58,10 +59,27 @@ void    send_packet(const char *ip, int port, int socket) {
     tcp->seq = htonl(rand());
     tcp->ack_seq = 0;
     tcp->doff = 5;
-    //tcp->rst = 1;
-    tcp->syn = 1; 
+    switch (scan) {
+        case SCAN_SYN:
+            tcp->th_flags = TH_SYN;      // 0x02
+            break;
+        case SCAN_ACK:
+            tcp->th_flags = TH_ACK;      // 0x10
+            break;
+        case SCAN_NULL:
+            tcp->th_flags = 0;           // aucun bit activé
+            break;
+        case SCAN_FIN:
+            tcp->th_flags = TH_FIN;      // 0x01
+            break;
+        case SCAN_XMAS:
+            tcp->th_flags = TH_FIN | TH_PUSH | TH_URG;  // 0x01 | 0x08 | 0x20 = 0x29
+            break;
+        case SCAN_UDP:
+            // construire un datagramme UDP ici
+            break;
+    }
     tcp->window = htons(0);
-    tcp->check = 0;  // Sera calculé plus tard
     tcp->urg_ptr = 0;
 
 

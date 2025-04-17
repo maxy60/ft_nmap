@@ -8,14 +8,17 @@
 ✅2. utiliser poll(dans le thread principal) et libpcap(avec un thread) pour 
 ✅receptionner les paquets utiliser un timeout global si pas de reponse,
 
-URGENT. Le code est fonctionnel mais il faut revoir la facon dont je gere les thread et les mutex
+✅URGENT. Le code est fonctionnel mais il faut revoir la facon dont je gere les thread et les mutex
 
-3. gerer le parsing des ports si ce n'est pas une plage mais un port unique
+✅3. gerer le parsing des ports si ce n'est pas une plage mais un port unique
+
 
 4. implementer nmap avec tout les protocoles
-4.1 Voir si il faut envoyer un paquet pour chaque protocole sur chaque port
-(a mon avis non voir comment optimiser)
+✅4.CORRECTION gerer par type de scan
+✅4.1 Voir si il faut envoyer un paquet pour chaque protocole sur chaque port
 4.2 Voir si on utilise un socket par protocole(a mon avis oui)
+✅4.3 parser --scan pour avoir la possibilité de choisir plusieurs scan format: --scan SYN,ACK..
+✅4.4 le nombre de paquets doit etre gerer differement du nombre de port à scanner = le nombre de paquet car on renvoie un paquet pour chaque type de scan
 
 5. implementer nmap pouvant gerer une plage ip
 

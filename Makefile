@@ -1,6 +1,8 @@
 SRCS		= srcs/main.c			\
 			  srcs/send_packet.c	\
-			  srcs/packet_info.c
+			  srcs/packet_info.c	\
+			  srcs/routines.c		\
+			  srcs/utils.c
 
 OBJS		= ${SRCS:.c=.o} 
 

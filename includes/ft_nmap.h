@@ -19,31 +19,39 @@
 #include <pcap.h>
 #include <pthread.h>
 #include <ifaddrs.h>
+#include <stdbool.h>
+#include <ctype.h>
 
 //tmp
 #define PACKET_SIZE 4096
+#define MAX_SCAN_TYPES 6
 
-typedef struct s_packet_list {
-    int port;
-    struct timeval sent_time; // Timestamp d'envoi
-    int active;
-    int resp;
-} t_packet_list;
-
-typedef struct s_scan_result {
-    int port;
-    int state;     // OPEN, CLOSED, FILTERED, etc.
-    char reason[64]; // TCP RST reçu, aucune réponse, etc.
-} t_scan_result;
-
-enum scan_type {
+typedef enum {
     SCAN_SYN,
     SCAN_ACK,
     SCAN_NULL,
     SCAN_FIN,
     SCAN_XMAS,
-    UDP
-};
+    SCAN_UDP
+} t_scan_type;
+
+typedef struct s_port_state {
+    bool is_open;
+    bool is_closed;
+    bool is_filtered;
+    bool is_unfiltered;
+} t_port_state;
+
+typedef struct s_packet_list {
+    int port;
+    struct timeval sent_time; // Timestamp d'envoi
+
+    int active;
+    t_scan_type scan_type;
+    t_port_state resp;
+
+} t_packet_list;
+
 
 typedef struct  s_nmap
 {
@@ -53,11 +61,19 @@ typedef struct  s_nmap
     int threads_num;
     int port_start;
     int port_end;
-    int current_port;
+    int current_packet;
     int packet_nbr;
     t_packet_list *send_list;
+    t_scan_type scan_types[MAX_SCAN_TYPES];   // tableau dynamique
+    int scan_count;            // nombre de scans à effectuer
 }   t_nmap;
 
+typedef struct s_thread_info {
+    pthread_mutex_t lock;
+    pthread_mutex_t list_lock;
+    pcap_t          *handle;
+    t_nmap          *nmap;
+} t_thread_info;
 
 struct pseudo_header {
     uint32_t source_address;
@@ -67,25 +83,20 @@ struct pseudo_header {
     uint16_t tcp_length;
 };
 
-// Union contenant les différents en-têtes de protocole
-typedef union {
-    struct tcphdr tcp;
-    struct udphdr udp;
-    struct icmphdr icmp;
-} ProtocolHeader;
-
-// Structure contenant l'en-tête IP et le protocole choisi
-typedef struct s_packet {
-    struct iphdr ip;         // En-tête IP
-    ProtocolHeader protocol; // Union des protocoles
-} t_packet;
-
 
 uint16_t checksum(void *b, int len);
 void    get_local_ip(char *ip);
-void    send_packet(const char *ip, int port, int socket);
+void    send_packet(const char *ip, int port, int socket, t_scan_type scan);
 void    analyse_packet(char *buffer);
-
-
+void    *worker_thread(void *arg);
+t_packet_list *get_packet(int port, t_thread_info *thread_info);
+void mark_packet_received(int port, t_thread_info *thread_info);
+void handle_pcap_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
+void *pcap_listener_thread(void *arg);
+void *pcap_timeout_thread(void *arg);
+void    malloc_packet_list(t_nmap *nmap);
+void    get_local_ip(char *ip);
+int parse_port_range(const char *input, int *start, int *end);
+int parse_scan_types(char *str, t_scan_type *scan_types);
 
 #endif
