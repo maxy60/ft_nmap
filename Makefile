@@ -1,6 +1,5 @@
 SRCS		= srcs/main.c			\
 			  srcs/send_packet.c	\
-			  srcs/packet_info.c	\
 			  srcs/routines.c		\
 			  srcs/utils.c			\
 			  srcs/print_analyse.c
