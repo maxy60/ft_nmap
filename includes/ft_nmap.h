@@ -101,5 +101,6 @@ void    get_local_ip(char *ip);
 int parse_port_range(const char *input, int *start, int *end);
 int parse_scan_types(char *str, t_scan_type *scan_types);
 void    print_analyse(t_packet_list *packet_list, int packet_nbr, int scan_count);
+void    analyse_no_reply(t_packet_list *packet_list, int packet_nbr);
 
 #endif

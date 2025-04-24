@@ -151,6 +151,7 @@ int main(int ac, char **av) {
             }
         }
     }
+    analyse_no_reply(g_nmap.send_list, g_nmap.packet_nbr);
     for (int i = 0; i < g_nmap.packet_nbr; i++) {
         printf("Index %d: port=%d, scan type: %u active=%d resp=%d\n", i, g_nmap.send_list[i].port, g_nmap.send_list[i].scan_type, g_nmap.send_list[i].active, g_nmap.send_list[i].resp);
     }
