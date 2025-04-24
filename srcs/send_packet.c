@@ -54,7 +54,7 @@ void    send_packet(const char *ip, int port, int socket, t_scan_type scan) {
     ip_pkt->check = checksum((unsigned short *)packet, sizeof(struct iphdr));
 
     // Remplissage de l'en-tête TCP
-    tcp->source = htons(1024 + rand() % 65535);  // Port source
+    tcp->source = htons(5000 + scan);  // Port source
     tcp->dest = htons(port);
     tcp->seq = htonl(rand());
     tcp->ack_seq = 0;
@@ -76,7 +76,7 @@ void    send_packet(const char *ip, int port, int socket, t_scan_type scan) {
             tcp->th_flags = TH_FIN | TH_PUSH | TH_URG;  // 0x01 | 0x08 | 0x20 = 0x29
             break;
         case SCAN_UDP:
-            // construire un datagramme UDP ici
+            // UDP 
             break;
     }
     tcp->window = htons(0);

@@ -35,17 +35,19 @@ typedef enum {
     SCAN_UDP
 } t_scan_type;
 
-typedef struct s_port_state {
-    bool is_open;
-    bool is_closed;
-    bool is_filtered;
-    bool is_unfiltered;
+typedef enum s_port_state {
+    is_filtered,
+    is_open,
+    is_closed,
+    is_unfiltered,
+    is_open_filtered,
+    unknown
 } t_port_state;
 
 typedef struct s_packet_list {
     int port;
     struct timeval sent_time; // Timestamp d'envoi
-
+    char *service_name;
     int active;
     t_scan_type scan_type;
     t_port_state resp;
@@ -89,8 +91,8 @@ void    get_local_ip(char *ip);
 void    send_packet(const char *ip, int port, int socket, t_scan_type scan);
 void    analyse_packet(char *buffer);
 void    *worker_thread(void *arg);
-t_packet_list *get_packet(int port, t_thread_info *thread_info);
-void mark_packet_received(int port, t_thread_info *thread_info);
+t_packet_list *get_packet(int port, int scan, t_thread_info *thread_info);
+void mark_packet_received(int port, int scan, uint8_t flags, t_thread_info *thread_info);
 void handle_pcap_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 void *pcap_listener_thread(void *arg);
 void *pcap_timeout_thread(void *arg);
@@ -98,5 +100,6 @@ void    malloc_packet_list(t_nmap *nmap);
 void    get_local_ip(char *ip);
 int parse_port_range(const char *input, int *start, int *end);
 int parse_scan_types(char *str, t_scan_type *scan_types);
+void    print_analyse(t_packet_list *packet_list, int packet_nbr, int scan_count);
 
 #endif

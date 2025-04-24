@@ -50,7 +50,6 @@ int main(int ac, char **av) {
                 printf("incorrect port range\n");
                 return -1;
             }
-            //g_nmap.packet_nbr = g_nmap.port_end - g_nmap.port_start;
         }
         else if (strcmp(av[i], "--scan") == 0 && i < ac) {
             if ((g_nmap.scan_count = parse_scan_types(av[i + 1], g_nmap.scan_types)) == -1)
@@ -81,7 +80,6 @@ int main(int ac, char **av) {
     // Création du socket brut
     g_nmap.sock_tcp = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
     //sock_udp = socket(PF_INET, SOCK_RAW, IPPROTO_UDP);
-    //sock_icmp = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (g_nmap.sock_tcp < 0) {
         perror("Socket");
         return 1;
@@ -147,15 +145,16 @@ int main(int ac, char **av) {
                 recvfrom(g_nmap.sock_tcp, buffer, sizeof(buffer), 0, (struct sockaddr *)&src_addr, &addr_len);
                 struct iphdr *ip_resp = (struct iphdr *)buffer;
                 struct tcphdr *tcp_resp = (struct tcphdr *)(buffer + (ip_resp->ihl * 4));
-                printf("Paquet TCP brut reçu de %s au port: %d\n", inet_ntoa(src_addr.sin_addr), ntohs(tcp_resp->source));
-                mark_packet_received(ntohs(tcp_resp->source), &thread_info);
-                //analyse_packet(buffer);
+                uint8_t flags = tcp_resp->th_flags;
+                printf("Paquet TCP brut reçu de %s au port: %d sur notre port: %d\n", inet_ntoa(src_addr.sin_addr), ntohs(tcp_resp->source), ntohs(tcp_resp->dest));
+                mark_packet_received(ntohs(tcp_resp->source),(ntohs(tcp_resp->dest) -5000), flags, &thread_info);
             }
         }
     }
     for (int i = 0; i < g_nmap.packet_nbr; i++) {
-        printf("Index %d: port=%d, scan type: %u active=%d\n", i, g_nmap.send_list[i].port, g_nmap.send_list[i].scan_type, g_nmap.send_list[i].active);
+        printf("Index %d: port=%d, scan type: %u active=%d resp=%d\n", i, g_nmap.send_list[i].port, g_nmap.send_list[i].scan_type, g_nmap.send_list[i].active, g_nmap.send_list[i].resp);
     }
+    print_analyse(g_nmap.send_list, g_nmap.packet_nbr, g_nmap.scan_count);
     free(g_nmap.send_list);    
     close(g_nmap.sock_tcp);
 
