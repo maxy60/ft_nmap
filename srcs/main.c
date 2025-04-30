@@ -9,11 +9,6 @@ static t_nmap g_nmap = {
     .port_end = 1024,
     .current_packet = 0,
     .packet_nbr = 0,
-	.dest_addr = NULL,
-	.dest = {
-		.sin_family = AF_INET,
-		.sin_port = 0
-	}
 };
 
 int main(int ac, char **av) {
@@ -33,13 +28,13 @@ int main(int ac, char **av) {
                 return 1;   //gerer l'erreur correctement
             }
             struct sockaddr_in *addr = (struct sockaddr_in *)res->ai_addr;
-            g_nmap.dest_addr = inet_ntoa(addr->sin_addr);
-            g_nmap.dest.sin_addr.s_addr = addr->sin_addr.s_addr;
+            g_nmap.ips = malloc(sizeof(char *));
+            char *ip_tmp = inet_ntoa(addr->sin_addr);
+            g_nmap.ips[0] = strdup(ip_tmp);
+            g_nmap.total_ip = 1;
             is_ip += 1;
-            printf("des_addr = %s\n", g_nmap.dest_addr);
         }
         else if (strcmp(av[i], "--file") == 0 && i < ac) {
-            printf("dans la condition\n");
             char *filename = av[i + 1];
             if(!check_file_access(filename)) {
                 return 1;
@@ -72,7 +67,6 @@ int main(int ac, char **av) {
         }
         i++;
     }
-    g_nmap.packet_nbr = ((g_nmap.port_end - g_nmap.port_start) * g_nmap.scan_count * g_nmap.total_ip);
     printf("threads num = %d, port_start = %d, port_end = %d\n",g_nmap.threads_num, g_nmap.port_start, g_nmap.port_end);
     if(is_ip == 1) { //just for use is_ip and compile easy
         printf("is_ip = %d\n", is_ip);
@@ -81,15 +75,20 @@ int main(int ac, char **av) {
         printf("prblm\n");
         return -1;
     }
-    if (!is_scan_spe)
-        g_nmap.scan_count = parse_scan_types("SYN,ACK,NULL,FIN,XMAS,UDP", g_nmap.scan_types);
+    if (is_scan_spe != true) {
+        printf("JE SUIS ICIIII\n");
+        char *str = strdup("SYN,ACK,NULL,FIN,XMAS,UDP");
+        if ((g_nmap.scan_count = parse_scan_types(str, g_nmap.scan_types)) == -1)
+            printf("err");
+        free(str);
+    }
+    g_nmap.packet_nbr = ((g_nmap.port_end - g_nmap.port_start) * g_nmap.scan_count * g_nmap.total_ip);
         
     //initialize_capture(); no need furtivity
     //int sock_tcp;
     //int sock_udp;
     //int sock_icmp;
     //struct sockaddr_in dest;
-
 
     // Création du socket brut
     g_nmap.sock_tcp = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
@@ -104,6 +103,7 @@ int main(int ac, char **av) {
         perror("setsockopt");
         return 1;
     }
+
     malloc_packet_list(&g_nmap);
     t_thread_info thread_info;
     thread_info.nmap = &g_nmap;
@@ -156,8 +156,12 @@ int main(int ac, char **av) {
                 struct iphdr *ip_resp = (struct iphdr *)buffer;
                 struct tcphdr *tcp_resp = (struct tcphdr *)(buffer + (ip_resp->ihl * 4));
                 uint8_t flags = tcp_resp->th_flags;
+                char src_ip[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &(ip_resp->saddr), src_ip, INET_ADDRSTRLEN);
+                t_packet_list *my_packet = get_packet(ntohs(tcp_resp->source), (ntohs(tcp_resp->dest) -5000), src_ip, &thread_info); //ici rajouter l'ip
+
                 printf("Paquet TCP brut reçu de %s au port: %d sur notre port: %d\n", inet_ntoa(src_addr.sin_addr), ntohs(tcp_resp->source), ntohs(tcp_resp->dest));
-                mark_packet_received(ntohs(tcp_resp->source),(ntohs(tcp_resp->dest) -5000), flags, &thread_info);
+                mark_packet_received(my_packet, flags, &thread_info);
             }
         }
     }

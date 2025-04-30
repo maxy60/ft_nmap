@@ -77,7 +77,6 @@ void malloc_packet_list(t_nmap *nmap) {
         exit(EXIT_FAILURE);
     }
     memset(nmap->send_list, 0, sizeof(t_packet_list) * range);
-    printf("ICIIIII\n");
 }
 
 

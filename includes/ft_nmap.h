@@ -61,9 +61,6 @@ typedef struct s_packet_list {
 
 typedef struct  s_nmap
 {
-    struct sockaddr_in   dest;
-    char    *dest_addr;
-
     int sock_tcp;
     int threads_num;
     int port_start;
@@ -100,8 +97,8 @@ void    get_local_ip(char *ip);
 void    send_packet(const char *ip, int port, int socket, t_scan_type scan);
 void    analyse_packet(char *buffer);
 void    *worker_thread(void *arg);
-t_packet_list *get_packet(int port, int scan, t_thread_info *thread_info);
-void    mark_packet_received(int port, int scan, uint8_t flags, t_thread_info *thread_info);
+t_packet_list *get_packet(int port, int scan, char *ip, t_thread_info *thread_info);
+void    mark_packet_received(t_packet_list *packet, uint8_t flags, t_thread_info *thread_info);
 void    handle_pcap_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 void    *pcap_listener_thread(void *arg);
 void    *pcap_timeout_thread(void *arg);

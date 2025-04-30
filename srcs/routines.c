@@ -29,10 +29,10 @@ void *worker_thread(void *arg) {
     return NULL;
 }
 
-t_packet_list *get_packet(int port, int scan, t_thread_info *thread_info) {
+t_packet_list *get_packet(int port, int scan, char *ip, t_thread_info *thread_info) {
     t_nmap *nmap = thread_info->nmap;
     for (int i = 0; i < nmap->packet_nbr; i++) {
-        if (nmap->send_list[i].active && nmap->send_list[i].port == port && nmap->send_list[i].scan_type == (t_scan_type)scan) {
+        if (nmap->send_list[i].active && nmap->send_list[i].port == port && nmap->send_list[i].scan_type == (t_scan_type)scan && strcmp(nmap->send_list[i].ip, ip) == 0) {
             return &nmap->send_list[i];
         }
     }
@@ -69,9 +69,8 @@ void    annalyse_resp(t_port_state *resp, t_scan_type scan_type, uint8_t flags) 
     }
 }
 
-void mark_packet_received(int port, int scan, uint8_t flags, t_thread_info *thread_info) {
+void mark_packet_received(t_packet_list *packet, uint8_t flags, t_thread_info *thread_info) {
     pthread_mutex_lock(&thread_info->list_lock);
-    t_packet_list *packet = get_packet(port, scan, thread_info);
     if (packet && packet->active == 1) {
         packet->active = 0;
         annalyse_resp(&packet->resp, packet->scan_type, flags);
@@ -92,7 +91,11 @@ void handle_pcap_packet(u_char *args, const struct pcap_pkthdr *header, const u_
         int src_port = ntohs(tcp_hdr->th_sport);
         int scan = ntohs(tcp_hdr->th_dport) - 5000;
         uint8_t flags = tcp_hdr->th_flags;
-        mark_packet_received(src_port, scan, flags, thread_info);
+        char src_ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(ip_hdr->ip_src), src_ip, INET_ADDRSTRLEN);
+        t_packet_list *my_packet = get_packet(src_port, scan, src_ip, thread_info);
+
+        mark_packet_received(my_packet, flags, thread_info);
 
         printf("[PCAP] TCP packet received from port %d for scan %d, th_flags: %d\n", src_port, scan, tcp_hdr->th_flags);
 
@@ -103,7 +106,7 @@ void handle_pcap_packet(u_char *args, const struct pcap_pkthdr *header, const u_
         int scan = ntohs(udp_hdr->uh_dport) - 5000;
 
         // les paquets udp n'ont pas de flag
-        mark_packet_received(src_port, scan, 0, thread_info);
+        //mark_packet_received(src_port, scan, 0, thread_info);
 
         printf("[PCAP] UDP packet received from port %d for scan %d\n", src_port, scan);
     }
