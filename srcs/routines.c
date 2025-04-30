@@ -11,16 +11,19 @@ void *worker_thread(void *arg) {
         }
         int packet_id = nmap->current_packet++;
         pthread_mutex_unlock(&thread_info->lock);
-        int port_index = packet_id / nmap->scan_count;
-        int scan_index = packet_id % nmap->scan_count;
+        int ip_index = packet_id / ((nmap->port_end - nmap->port_start + 1) * nmap->scan_count);
+        int remainder = packet_id % ((nmap->port_end - nmap->port_start + 1) * nmap->scan_count);
+        int port_index = remainder / nmap->scan_count; //recalculer
+        int scan_index = remainder % nmap->scan_count;
         int port = nmap->port_start + port_index;
         pthread_mutex_lock(&thread_info->list_lock);
         nmap->send_list[packet_id].port = port;
-        gettimeofday(&nmap->send_list[packet_id].sent_time, NULL);
         nmap->send_list[packet_id].active = 1;
         nmap->send_list[packet_id].scan_type = nmap->scan_types[scan_index];
+        nmap->send_list[packet_id].ip = nmap->ips[ip_index];
+        //un ip_index ensuite l'extraire du buffer pour l'envoyer à send_packet
         pthread_mutex_unlock(&thread_info->list_lock);
-        send_packet(nmap->dest_addr, port, nmap->sock_tcp, nmap->scan_types[scan_index]);
+        send_packet(nmap->ips[ip_index], port, nmap->sock_tcp, nmap->scan_types[scan_index]);
         usleep(1000);  // Petite pause pour éviter la surcharge réseau
     }
     return NULL;

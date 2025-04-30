@@ -21,6 +21,10 @@
 #include <ifaddrs.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <fcntl.h>
+#include <errno.h>
+
+
 
 //tmp
 #define PACKET_SIZE 4096
@@ -45,9 +49,9 @@ typedef enum s_port_state {
 } t_port_state;
 
 typedef struct s_packet_list {
+    char *ip;
     int port;
-    struct timeval sent_time; // Timestamp d'envoi
-    char *service_name;
+    char *service_name;         //no use
     int active;
     t_scan_type scan_type;
     t_port_state resp;
@@ -59,13 +63,18 @@ typedef struct  s_nmap
 {
     struct sockaddr_in   dest;
     char    *dest_addr;
+
     int sock_tcp;
     int threads_num;
     int port_start;
     int port_end;
+    int total_ip;
+    char **ips;
     int current_packet;
-    int packet_nbr;
+    int packet_nbr; 
+
     t_packet_list *send_list;
+
     t_scan_type scan_types[MAX_SCAN_TYPES];   // tableau dynamique
     int scan_count;            // nombre de scans à effectuer
 }   t_nmap;
@@ -92,15 +101,19 @@ void    send_packet(const char *ip, int port, int socket, t_scan_type scan);
 void    analyse_packet(char *buffer);
 void    *worker_thread(void *arg);
 t_packet_list *get_packet(int port, int scan, t_thread_info *thread_info);
-void mark_packet_received(int port, int scan, uint8_t flags, t_thread_info *thread_info);
-void handle_pcap_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
-void *pcap_listener_thread(void *arg);
-void *pcap_timeout_thread(void *arg);
+void    mark_packet_received(int port, int scan, uint8_t flags, t_thread_info *thread_info);
+void    handle_pcap_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
+void    *pcap_listener_thread(void *arg);
+void    *pcap_timeout_thread(void *arg);
 void    malloc_packet_list(t_nmap *nmap);
 void    get_local_ip(char *ip);
-int parse_port_range(const char *input, int *start, int *end);
-int parse_scan_types(char *str, t_scan_type *scan_types);
+int     parse_port_range(const char *input, int *start, int *end);
+int     parse_scan_types(char *str, t_scan_type *scan_types);
 void    print_analyse(t_packet_list *packet_list, int packet_nbr, int scan_count);
 void    analyse_no_reply(t_packet_list *packet_list, int packet_nbr);
+int     check_file_access(const char *filename);
+char    **load_ips_from_file(const char *filename, int *total_ip);
+void    free_ips(char **ips, int count);
+
 
 #endif

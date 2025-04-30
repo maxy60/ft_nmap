@@ -56,37 +56,21 @@ void    analyse_no_reply(t_packet_list *packet_list, int packet_nbr) {
     }
 }
 
-/*void print_analyse(t_packet_list *packet_list, int packet_nbr, int scan_count) {
-    printf("Port   Service Name         Results                                Conclusion\n");
-    printf("-------------------------------------------------------------------------------\n");
 
-    int i = 0;
-    while (i < packet_nbr) {
-        printf("%-6d %-20s", packet_list[i].port, packet_list[i].service_name ? packet_list[i].service_name : "Unassigned");
-
-        for (int j = 0; j < scan_count; j++) {
-                printf(" %s(%s)", scan_type_to_str(packet_list[i].scan_type), port_state_to_str(packet_list[i].resp));
-            i++;
-        }
-        printf("\n%-27s%u\n", "", packet_list[i].resp);
-    }
-}*/
-
-#define LINE_WIDTH 80
-#define CONCLUSION_COL_START 64  // Position approximative où commence "Conclusion"
 
 void print_analyse(t_packet_list *packet_list, int packet_nbr, int scan_count) {
-    printf("Port   Service Name         Results                                Conclusion\n");
-    printf("-------------------------------------------------------------------------------\n");
+    printf("IP:Port                 Service Name         Results                                Conclusion\n");
+    printf("------------------------------------------------------------------------------------------------\n");
 
     int i = 0;
     while (i < packet_nbr) {
         int port = packet_list[i].port;
         const char *service = packet_list[i].service_name ? packet_list[i].service_name : "Unassigned";
+        const char *ip = packet_list[i].ip;
+        int port_width = 22 - strlen(ip);
+        printf("%s:%-*d %-20s",ip, port_width, port, service);
 
-        printf("%-6d %-20s", port, service);
-
-        int line_len = 26; // Already printed chars before results
+        int line_len = 46; 
 
         for (int j = 0; j < scan_count && i < packet_nbr; j++, i++) {
             char result[64];
@@ -96,21 +80,20 @@ void print_analyse(t_packet_list *packet_list, int packet_nbr, int scan_count) {
 
             int result_len = strlen(result);
 
-            if (line_len + result_len >= CONCLUSION_COL_START) {
-                printf("\n%-27s", "");  // indent to match Results column
-                line_len = 27;
+            if (line_len + result_len >= 84) {
+                printf("\n%-44s", "");  
+                line_len = 44;
             }
 
             printf("%s", result);
             line_len += result_len;
         }
 
-        // Align to the conclusion column (starting at col 64)
-        int spaces_to_conclusion = CONCLUSION_COL_START - line_len;
+        int spaces_to_conclusion = 84 - line_len;
         if (spaces_to_conclusion > 0)
             printf("%*s", spaces_to_conclusion, "");
 
-        // Print the final conclusion based on last scan of the port (or pick a smarter logic)
+        // revoir la conclusion
         printf("%s\n", port_state_to_str(packet_list[i - 1].resp));
     }
 }

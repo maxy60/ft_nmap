@@ -23,7 +23,6 @@ uint16_t checksum(void *b, int len) {
     return result;
 }
 
-#include <netinet/tcp.h>
 void    send_packet(const char *ip, int port, int socket, t_scan_type scan) {
     char packet[PACKET_SIZE];
     memset(packet, 0, PACKET_SIZE); //tmp

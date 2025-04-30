@@ -38,6 +38,20 @@ int main(int ac, char **av) {
             is_ip += 1;
             printf("des_addr = %s\n", g_nmap.dest_addr);
         }
+        else if (strcmp(av[i], "--file") == 0 && i < ac) {
+            printf("dans la condition\n");
+            char *filename = av[i + 1];
+            if(!check_file_access(filename)) {
+                return 1;
+            }
+            g_nmap.ips = load_ips_from_file(filename, &g_nmap.total_ip);
+            if (!g_nmap.ips) {
+                    fprintf(stderr, "Erreur chargement des IPs\n"); //propre
+                    exit(EXIT_FAILURE);
+            }
+            is_ip += 1;
+
+        }
         else if (strcmp(av[i], "--speedup") == 0 && i < ac) {
             g_nmap.threads_num = atoi(av[i + 1]);
             if (g_nmap.threads_num < 1 || g_nmap.threads_num > 250) {
@@ -58,7 +72,7 @@ int main(int ac, char **av) {
         }
         i++;
     }
-    g_nmap.packet_nbr = ((g_nmap.port_end - g_nmap.port_start) * g_nmap.scan_count);
+    g_nmap.packet_nbr = ((g_nmap.port_end - g_nmap.port_start) * g_nmap.scan_count * g_nmap.total_ip);
     printf("threads num = %d, port_start = %d, port_end = %d\n",g_nmap.threads_num, g_nmap.port_start, g_nmap.port_end);
     if(is_ip == 1) { //just for use is_ip and compile easy
         printf("is_ip = %d\n", is_ip);
@@ -69,7 +83,7 @@ int main(int ac, char **av) {
     }
     if (!is_scan_spe)
         g_nmap.scan_count = parse_scan_types("SYN,ACK,NULL,FIN,XMAS,UDP", g_nmap.scan_types);
-
+        
     //initialize_capture(); no need furtivity
     //int sock_tcp;
     //int sock_udp;
@@ -90,14 +104,12 @@ int main(int ac, char **av) {
         perror("setsockopt");
         return 1;
     }
-
     malloc_packet_list(&g_nmap);
     t_thread_info thread_info;
     thread_info.nmap = &g_nmap;
     pthread_t threads[g_nmap.threads_num];
     pthread_mutex_init(&thread_info.lock, NULL);
     pthread_mutex_init(&thread_info.list_lock, NULL);
-
       // Création du pool de threads
     for (int i = 0; i < g_nmap.threads_num; i++) {
         pthread_create(&threads[i], NULL, worker_thread, (void *)&thread_info);
@@ -106,8 +118,6 @@ int main(int ac, char **av) {
     for (int i = 0; i < g_nmap.threads_num; i++) {
         pthread_join(threads[i], NULL);
     }
-    printf("TEST\n");
-
     struct pollfd fds[1];
     fds[0].fd = g_nmap.sock_tcp;
     fds[0].events = POLLIN;  // Écoute les paquets TCP reçus
@@ -153,10 +163,11 @@ int main(int ac, char **av) {
     }
     analyse_no_reply(g_nmap.send_list, g_nmap.packet_nbr);
     for (int i = 0; i < g_nmap.packet_nbr; i++) {
-        printf("Index %d: port=%d, scan type: %u active=%d resp=%d\n", i, g_nmap.send_list[i].port, g_nmap.send_list[i].scan_type, g_nmap.send_list[i].active, g_nmap.send_list[i].resp);
+        printf("Index %d: ip=%s ,port=%d, scan type: %u active=%d resp=%d\n", i,  g_nmap.send_list[i].ip, g_nmap.send_list[i].port, g_nmap.send_list[i].scan_type, g_nmap.send_list[i].active, g_nmap.send_list[i].resp);
     }
     print_analyse(g_nmap.send_list, g_nmap.packet_nbr, g_nmap.scan_count);
-    free(g_nmap.send_list);    
+    free_ips(g_nmap.ips, g_nmap.total_ip);
+    free(g_nmap.send_list);
     close(g_nmap.sock_tcp);
 
     return 0;

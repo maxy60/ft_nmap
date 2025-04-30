@@ -1,5 +1,67 @@
 #include <ft_nmap.h>
 
+int is_valid_ip(const char *ip) {
+    struct sockaddr_in sa;
+    return inet_pton(AF_INET, ip, &(sa.sin_addr)) == 1;
+}
+
+char **load_ips_from_file(const char *filename, int *total_ip) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening IP file");
+        return NULL;
+    }
+
+    char *buffer = malloc(65536);
+    if (!buffer) {
+        perror("Memory allocation failed");
+        fclose(file);
+        return NULL;
+    }
+
+    size_t total_read = fread(buffer, 1, 65536 - 1, file);
+    buffer[total_read] = '\0';
+    fclose(file);
+
+    char **ips = NULL;
+    *total_ip = 0;
+
+    const char *delims = " \t\r\n";
+    char *token = strtok(buffer, delims);
+    while (token) {
+        if (is_valid_ip(token)) {
+            ips = realloc(ips, sizeof(char *) * (*total_ip + 1));
+            ips[*total_ip] = strdup(token);
+            (*total_ip)++;
+        } else {
+            fprintf(stderr, "Invalid IP skipped: %s\n", token);
+        }
+        token = strtok(NULL, delims);
+    }
+
+    free(buffer);
+    return ips;
+}
+
+void free_ips(char **ips, int count) {
+    if (!ips) return;
+    for (int i = 0; i < count; i++) {
+        free(ips[i]);
+    }
+    free(ips);
+}
+
+int check_file_access(const char *filename) {
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        fprintf(stderr, "Erreur ouverture fichier '%s' : %s\n", filename, strerror(errno));
+        return 0;
+    }
+    close(fd);
+    return 1;
+}
+
+
 void malloc_packet_list(t_nmap *nmap) {
     int range;
 
@@ -15,6 +77,7 @@ void malloc_packet_list(t_nmap *nmap) {
         exit(EXIT_FAILURE);
     }
     memset(nmap->send_list, 0, sizeof(t_packet_list) * range);
+    printf("ICIIIII\n");
 }
 
 
@@ -57,8 +120,8 @@ int parse_port_range(const char *input, int *start, int *end) {
     
     *start = atoi(input);
     *end = atoi(dash + 1);
-
-    if (*start < 0 || *start > 65535 || *end < 0 || *end > 65535 || *start > *end) {
+    int nbr_port = *end - *start;
+    if (*start < 0 || *start > 65535 || *end < 0 || *end > 65535 || *start > *end || nbr_port > 1024) {
         return -1;
     }
     return 0;

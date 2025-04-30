@@ -19,6 +19,7 @@
 4.2 Voir si on utilise un socket par protocole(a mon avis oui)
 ✅4.3 parser --scan pour avoir la possibilité de choisir plusieurs scan format: --scan SYN,ACK..
 ✅4.4 le nombre de paquets doit etre gerer differement du nombre de port à scanner = le nombre de paquet car on renvoie un paquet pour chaque type de scan
+4.5 gerer le cas ou l'utilisateur ne definis pas lui meme de scan (dans se cas tous les scans doivent etre effectué)
 
 5. implementer nmap pouvant gerer une plage ip
 
@@ -32,4 +33,5 @@ udp6. Annalyse des paquets pour determiner si le port est open filtered closed e
 
 9. Pour UDP est ICMP utiliser des socket standard pas brut (voir pour meme implementer une version avec socket standar tcp(sudo..))
 
-
+10. gestion des types de services
+10.1 et des conclusions de scan
