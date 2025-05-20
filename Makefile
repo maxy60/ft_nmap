@@ -2,7 +2,8 @@ SRCS		= srcs/main.c			\
 			  srcs/send_packet.c	\
 			  srcs/routines.c		\
 			  srcs/utils.c			\
-			  srcs/print_analyse.c
+			  srcs/print_analyse.c	\
+			  srcs/parser.c
 
 OBJS		= ${SRCS:.c=.o} 
 

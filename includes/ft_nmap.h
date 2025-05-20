@@ -111,6 +111,7 @@ void    analyse_no_reply(t_packet_list *packet_list, int packet_nbr);
 int     check_file_access(const char *filename);
 char    **load_ips_from_file(const char *filename, int *total_ip);
 void    free_ips(char **ips, int count);
+int     parse_arg(int ac, char **av, t_nmap *nmap);
 
 
 #endif

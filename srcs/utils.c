@@ -66,6 +66,7 @@ void malloc_packet_list(t_nmap *nmap) {
     int range;
 
     if (nmap->port_end == nmap->port_start) {
+        printf("JE SUIS ICI\n");
         range = 1 * nmap->scan_count;
     }
 
@@ -106,8 +107,16 @@ void    get_local_ip(char *ip) {
 }
 
 int parse_port_range(const char *input, int *start, int *end) {
+    int i =0;
+    while (input[i]) {
+        if ((input[i] < 48 || input[i] > 57) && input[i] != '-')
+            return -1;
+        i++;
+    }
+
     char *dash = strchr(input, '-');
     if (!dash) {
+        printf("ON EST LA\n");
         *start = atoi(input);
         *end = atoi(input);
         if (*start < 0 || *start > 65535)
@@ -120,7 +129,8 @@ int parse_port_range(const char *input, int *start, int *end) {
     *start = atoi(input);
     *end = atoi(dash + 1);
     int nbr_port = *end - *start;
-    if (*start < 0 || *start > 65535 || *end < 0 || *end > 65535 || *start > *end || nbr_port > 1024) {
+    printf("port: %d\n", nbr_port);
+    if (*start < 0 || *start > 65535 || *end < 0 || *end > 65535 || *start > *end || nbr_port >= 1024) {
         return -1;
     }
     return 0;
