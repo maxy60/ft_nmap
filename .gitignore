@@ -1,0 +1,11 @@
+*.swp
+*.sw*
+obj/
+dep/
+*.o
+ft_nmap
+.DS_Store
+.nfs*
+tags
+.cache/
+compile_commands.json
