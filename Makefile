@@ -1,36 +1,53 @@
-SRCS		= srcs/main.c			\
-			  srcs/send_packet.c	\
-			  srcs/routines.c		\
-			  srcs/utils.c			\
-			  srcs/print_analyse.c	\
-			  srcs/parser.c
+NAME := ft_nmap
+CC := clang
+CPPFLAGS := -Iincludes
+CFLAGS := -Wall -Wextra -Werror
+LDLIBS := -lpcap
+SRCS := main.c send_packet.c routines.c utils.c print_analyse.c parser.c
+OBJS := $(SRCS:.c=.o)
+DEPS := $(SRCS:.c=.d)
+OBJDIR := obj
+DEPDIR := dep
+SUFFIXES += .d
 
-OBJS		= ${SRCS:.c=.o} 
+vpath %.c srcs
+vpath %.o $(OBJDIR)
+vpath %.d $(DEPDIR)
 
-NAME		= ft_nmap
+all: $(NAME)
 
-INCLUDES	= -I includes
+$(NAME): $(DEPS) $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(addprefix $(OBJDIR)/, $(OBJS)) $(LDLIBS)
 
-CC			= clang
+%.o: %.c $(DEPS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $(OBJDIR)/$@
 
-CCFLAGS	= -Wall -Werror -Wextra
+%.d: %.c
+	$(CC) $(CPPFLAGS) -MM -MF $(DEPDIR)/$@ $<
 
-PCAPFLAGS = -lpcap
+ifneq "$(MAKECMDGOALS)" "clean"
+ -include $(addprefix $(DEPDIR)/, $(DEPS))
+endif
 
-%.o: %.c 
-		$(CC) $(CCFLAGS) $(INCLUDES) -c $< -o $@
+debug: CFLAGS += -g -DDEBUG=1
+debug: $(NAME)
 
-all:		${NAME}
+$(OBJS): | $(OBJDIR)
 
-${NAME}:	$(OBJS)
-			$(CC) $(CCFLAGS) $(PCAPFLAGS) $(OBJS) $(LIB) -o $(NAME)
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
 
-clean:	
-					rm -f ${OBJS}
+$(DEPS): | $(DEPDIR)
 
-fclean:		clean
-					rm -f ${NAME}
+$(DEPDIR):
+	mkdir -p $(DEPDIR)
 
-re:			fclean all
+clean:
+	rm -rf $(OBJDIR) $(DEPDIR)
 
-.PHONY:		all clean fclean re
+fclean: clean
+	$(RM) -rf $(NAME)
+
+re: fclean all
+
+.PHONY: all debug clean fclean re
