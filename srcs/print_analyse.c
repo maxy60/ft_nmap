@@ -1,4 +1,4 @@
-#include <ft_nmap.h>
+#include "ft_nmap.h"
 
 const char *scan_type_to_str(t_scan_type type)
 {
