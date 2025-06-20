@@ -146,7 +146,7 @@ void *pcap_listener_thread(void *arg)
 void *pcap_timeout_thread(void *arg)
 {
   t_thread_info *thread_info = (t_thread_info *)arg;
-  sleep(5);  // ou usleep()
+  sleep(10);  // ou usleep()
   pcap_breakloop(thread_info->handle);
   return NULL;
 }
