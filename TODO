@@ -40,3 +40,5 @@ udp6. Annalyse des paquets pour determiner si le port est open filtered closed e
 
 12. gerer le cas ou le nombre de threads est à 0
 12.1 Voir comment eviter d'utiliser un thread pour pcap et rester optimiser
+
+13 Verifier si mon programme peux catch des paquets qui ne lui sont pas destiné notamment avec pcap

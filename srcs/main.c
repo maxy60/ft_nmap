@@ -11,13 +11,13 @@ static t_nmap g_nmap = {
     .packet_nbr = 0,
 };
 
-
 int main(int ac, char **av) {
     srand(time(NULL));  // Initialisation de rand() avec le temps actuel
-    if (parse_arg(ac, av, &g_nmap) == 1) {
-        printf("je suis ici\n");
+    int ret_parser = parse_arg(ac, av, &g_nmap) == 1;
+    if (ret_parser == 2)
         return 2;
-    }
+    else if (ret_parser == 1)
+        return 0;
     g_nmap.port_end += 1;
     g_nmap.packet_nbr = ((g_nmap.port_end - g_nmap.port_start) * g_nmap.scan_count * g_nmap.total_ip);
     printf("%d = (%d - %d) * %d * %d\n", g_nmap.packet_nbr, g_nmap.port_end, g_nmap.port_start, g_nmap.scan_count, g_nmap.total_ip);
@@ -53,9 +53,6 @@ int main(int ac, char **av) {
         pthread_create(&threads[i], NULL, worker_thread, (void *)&thread_info);
     }
     // Attente de la fin des threads
-    for (int i = 0; i < g_nmap.threads_num; i++) {
-        pthread_join(threads[i], NULL);
-    }
     struct pollfd fds[1];
     fds[0].fd = g_nmap.sock_tcp;
     fds[0].events = POLLIN;  // Écoute les paquets TCP reçus
@@ -71,12 +68,7 @@ int main(int ac, char **av) {
     pthread_create(&timeout_thread, NULL, pcap_timeout_thread, (void *)&thread_info);
     pthread_create(&pcap_thread, NULL, pcap_listener_thread, (void *)&thread_info);
 
-    pthread_join(timeout_thread, NULL);
-    pthread_join(pcap_thread, NULL);
-    pcap_close(thread_info.handle);
-    pthread_mutex_destroy(&thread_info.lock);
-    pthread_mutex_destroy(&thread_info.list_lock);
-    while (1) {   
+/*    while (1) {   
         int ret = poll(fds, 1, 5000);
         if (ret < 0) {
             //have to handle error corectly
@@ -102,11 +94,19 @@ int main(int ac, char **av) {
                 mark_packet_received(my_packet, flags, &thread_info);
             }
         }
-    }
+    }*/
     analyse_no_reply(g_nmap.send_list, g_nmap.packet_nbr);
-    for (int i = 0; i < g_nmap.packet_nbr; i++) {
-        printf("Index %d: ip=%s ,port=%d, scan type: %u active=%d resp=%d\n", i,  g_nmap.send_list[i].ip, g_nmap.send_list[i].port, g_nmap.send_list[i].scan_type, g_nmap.send_list[i].active, g_nmap.send_list[i].resp);
+    for (int i = 0; i < g_nmap.threads_num; i++) {
+        pthread_join(threads[i], NULL);
     }
+    pthread_join(timeout_thread, NULL);
+    pthread_join(pcap_thread, NULL);
+    pcap_close(thread_info.handle);
+    pthread_mutex_destroy(&thread_info.lock);
+    pthread_mutex_destroy(&thread_info.list_lock);
+    /*for (int i = 0; i < g_nmap.packet_nbr; i++) {
+        printf("Index %d: ip=%s ,port=%d, scan type: %u active=%d resp=%d\n", i,  g_nmap.send_list[i].ip, g_nmap.send_list[i].port, g_nmap.send_list[i].scan_type, g_nmap.send_list[i].active, g_nmap.send_list[i].resp);
+    }*/
     print_analyse(g_nmap.send_list, g_nmap.packet_nbr, g_nmap.scan_count);
     free_ips(g_nmap.ips, g_nmap.total_ip);
     free(g_nmap.send_list);
